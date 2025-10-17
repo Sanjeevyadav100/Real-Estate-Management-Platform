@@ -3,12 +3,16 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Bed, Bath, Square, MapPin } from "lucide-react";
 import { Link } from "wouter";
+import { useCart } from "@/hooks/use-cart";
+import { Button } from "@/components/ui/button";
 
 interface PropertyCardProps {
   property: Property;
 }
 
 export function PropertyCard({ property }: PropertyCardProps) {
+  const cart = useCart();
+
   const getStatusVariant = (status: string) => {
     switch (status) {
       case "available":
@@ -86,6 +90,21 @@ export function PropertyCard({ property }: PropertyCardProps) {
               <span>{property.squareFeet.toLocaleString()} sqft</span>
             </div>
           </div>
+
+          {property.status === "available" && (
+            <div className="mt-4">
+              <Button
+                size="sm"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  cart.add(property);
+                }}
+              >
+                Add to Cart
+              </Button>
+            </div>
+          )}
         </div>
       </Card>
     </Link>

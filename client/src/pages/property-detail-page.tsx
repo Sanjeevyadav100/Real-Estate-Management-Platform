@@ -2,6 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Property } from "@shared/schema";
 import { useRoute, Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import { useCart } from "@/hooks/use-cart";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { apiRequest } from "@/lib/queryClient";
+import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -200,12 +205,7 @@ export default function PropertyDetailPage() {
                 </div>
 
                 <div className="space-y-3">
-                  <Button className="w-full" size="lg" data-testid="button-contact">
-                    Contact Agent
-                  </Button>
-                  <Button className="w-full" variant="outline" size="lg" data-testid="button-schedule-tour">
-                    Schedule Tour
-                  </Button>
+                  <AddToCartSection property={property} />
                 </div>
 
                 <div className="mt-6 pt-6 border-t space-y-2 text-sm">
@@ -226,5 +226,48 @@ export default function PropertyDetailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function AddToCartSection({ property }: { property: Property }) {
+  const { add, remove, items, clear } = useCart();
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const qc = useQueryClient();
+
+  const inCart = items.some((it) => it.property.id === property.id);
+
+  const handleAdd = () => {
+    add(property);
+    toast({ title: "Added to cart", description: property.title });
+  };
+
+  const handlePurchase = async () => {
+    if (!user) {
+      toast({ title: "Sign in required", description: "Please sign in to purchase" });
+      return;
+    }
+
+    try {
+      await apiRequest('POST', '/api/purchase', { propertyIds: [property.id] });
+      toast({ title: 'Purchase complete', description: `Marked ${property.title} as sold` });
+      // remove from cart if present
+      remove(property.id);
+      // invalidate properties query so UI updates
+  qc.invalidateQueries({ queryKey: ['/api/properties'] });
+    } catch (err: any) {
+      toast({ title: 'Purchase failed', description: err.message || String(err) });
+    }
+  };
+
+  return (
+    <>
+      <Button className="w-full" size="lg" onClick={handleAdd} data-testid="button-add-to-cart">
+        {inCart ? 'In Cart' : 'Add to Cart'}
+      </Button>
+      <Button className="w-full mt-2" variant="outline" size="lg" onClick={handlePurchase} data-testid="button-purchase">
+        Purchase
+      </Button>
+    </>
   );
 }

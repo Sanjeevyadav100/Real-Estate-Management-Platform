@@ -85,6 +85,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Purchase properties (authenticated users)
+  app.post('/api/purchase', requireAuth, async (req, res) => {
+    try {
+      const { propertyIds } = req.body as { propertyIds?: string[] };
+      if (!Array.isArray(propertyIds) || propertyIds.length === 0) {
+        return res.status(400).send('propertyIds must be a non-empty array');
+      }
+
+      const updated: any[] = [];
+      for (const id of propertyIds) {
+        // mark as sold
+        const prop = await storage.updateProperty(id, { status: 'sold' });
+        if (prop) updated.push(prop);
+      }
+
+      res.json(updated);
+    } catch (error: any) {
+      res.status(500).send(error.message);
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

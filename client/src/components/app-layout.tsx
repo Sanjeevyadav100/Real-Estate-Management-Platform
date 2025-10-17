@@ -12,6 +12,11 @@ import {
 import { Building2, LogOut, User, LayoutDashboard, Home, List } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { ThemeToggle } from "./theme-toggle";
+import { useCart } from "@/hooks/use-cart";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { X } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -20,6 +25,8 @@ interface AppLayoutProps {
 export function AppLayout({ children }: AppLayoutProps) {
   const { user, logoutMutation } = useAuth();
   const [location] = useLocation();
+  const cart = useCart();
+  const qc = useQueryClient();
 
   const isAdmin = user?.role === "admin";
 
@@ -91,6 +98,55 @@ export function AppLayout({ children }: AppLayoutProps) {
 
           <div className="flex items-center gap-4">
             <ThemeToggle />
+            {/* Cart dropdown */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" className="gap-2">
+                  Cart ({cart.items.length})
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <div className="space-y-2">
+                  {cart.items.length === 0 ? (
+                    <div className="text-sm text-muted-foreground">Cart is empty</div>
+                  ) : (
+                    cart.items.map((it) => (
+                      <div key={it.property.id} className="flex items-center justify-between">
+                        <div>
+                          <div className="font-medium line-clamp-1">{it.property.title}</div>
+                          <div className="text-sm text-muted-foreground">${Number(it.property.price).toLocaleString()}</div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button size="sm" variant="ghost" onClick={() => cart.remove(it.property.id)}>
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+
+                  {cart.items.length > 0 && (
+                    <div className="flex gap-2">
+                      <Button
+                        className="flex-1"
+                        onClick={async () => {
+                          const ids = cart.items.map((i) => i.property.id);
+                          try {
+                            await apiRequest('POST', '/api/purchase', { propertyIds: ids });
+                            cart.clear();
+                            qc.invalidateQueries({ queryKey: ['/api/properties'] });
+                          } catch (err) {
+                            // ignore
+                          }
+                        }}
+                      >
+                        Purchase All
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
