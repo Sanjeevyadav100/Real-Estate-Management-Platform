@@ -1,137 +1,92 @@
-# PropManage - Real Estate Management Platform
+# 🏠 PropManage – Real Estate Management Platform  
 
-## Overview
+## 📖 Overview  
+**PropManage** is a full-stack real estate management platform where users can browse and explore property listings, while administrators can manage listings through a secure dashboard.  
 
-PropManage is a comprehensive real estate management application that enables property listing, browsing, and portfolio management. The platform features a public-facing property marketplace and an administrative dashboard for property management. Users can browse luxury properties with rich visual presentation, while administrators have full CRUD capabilities for managing the property database.
+The project showcases **modern web development practices**, including a **React + Express** architecture, **PostgreSQL** for persistent data storage, and **type-safe development** throughout the stack.  
 
-The application follows a modern full-stack architecture with a React frontend and Express backend, utilizing PostgreSQL for data persistence and session management.
+---
 
-## User Preferences
+## ⚙️ Tech Stack  
 
-Preferred communication style: Simple, everyday language.
+| Layer | Technologies |
+|-------|---------------|
+| **Frontend** | React 18, TypeScript, Vite, Wouter, TanStack Query, Tailwind CSS, shadcn/ui |
+| **Backend** | Express.js, Passport.js, Drizzle ORM |
+| **Database** | PostgreSQL (via Neon) |
+| **Auth & Security** | bcryptjs, express-session, connect-pg-simple |
+| **Build Tools** | esbuild, Drizzle Kit |
+| **Validation** | Zod, React Hook Form |
 
-## System Architecture
+---
 
-### Frontend Architecture
+## 🧠 Architecture Overview  
 
-**Framework & Build System**
-- React 18 with TypeScript for type-safe component development
-- Vite as the build tool and development server, providing fast HMR and optimized production builds
-- Wouter for lightweight client-side routing (chosen over React Router for smaller bundle size)
-- TanStack Query (React Query) for server state management with automatic caching and refetching
+### 🖥️ Frontend  
+- **React + Vite** for fast builds and HMR  
+- **shadcn/ui + Tailwind CSS** for a clean, responsive design  
+- **React Query** for automatic data caching and refetching  
+- **React Context** for managing auth, theme, and session states  
+- **Role-based UI** for admin and user dashboards  
+- **Form validation** using React Hook Form + Zod  
 
-**UI Component System**
-- shadcn/ui component library built on Radix UI primitives for accessible, customizable components
-- Tailwind CSS for utility-first styling with custom design tokens
-- Custom color palette supporting light/dark themes with CSS variables
-- Design inspired by Zillow, Redfin, and Airbnb for property presentation; Linear for dashboard interfaces
-- Comprehensive component set including forms, dialogs, tables, cards, and navigation elements
+### ⚙️ Backend  
+- **Express.js** REST API with structured route handling  
+- **Passport.js + Sessions** for user authentication  
+- **Role-based access control** (`requireAdmin`, `requireAuth`)  
+- **Drizzle ORM** for type-safe queries  
+- **Error handling middleware** for consistent API responses  
 
-**State Management Strategy**
-- Server state managed through React Query with configurable cache policies
-- Authentication state provided via React Context (AuthContext)
-- Theme state managed through ThemeProvider context
-- Form state handled by React Hook Form with Zod validation
+### 🗃️ Database  
+- **PostgreSQL (Neon)** for reliable data storage  
+- **connect-pg-simple** for storing user sessions  
+- **Schema design** with UUID primary keys and foreign keys  
+- **Drizzle ORM + Zod** for unified schema validation  
 
-**Key Frontend Patterns**
-- Protected routes using custom ProtectedRoute component that checks authentication status
-- Role-based UI rendering (admin vs. regular user dashboards)
-- Optimistic updates and automatic cache invalidation after mutations
-- Separation of concerns with dedicated hooks (useAuth, useTheme, useIsMobile)
+---
 
-### Backend Architecture
+## 📁 Project Folder Structure  
 
-**Server Framework**
-- Express.js as the HTTP server with middleware-based request handling
-- RESTful API design with conventional HTTP methods and status codes
-- Session-based authentication using Passport.js with Local Strategy
-- Custom middleware for authentication (`requireAuth`) and authorization (`requireAdmin`)
+```text
+PropManage/
+├── client/                  # React frontend
+│   ├── src/
+│   │   ├── components/       # Reusable UI components
+│   │   ├── hooks/            # Custom hooks (useAuth, useTheme, etc.)
+│   │   ├── pages/            # Application pages (public & dashboard)
+│   │   └── App.tsx           # Root component
+│   └── vite.config.ts        # Vite configuration
+├── server/                  # Express backend
+│   ├── routes/               # API routes
+│   ├── storage/              # Data access / storage layer
+│   ├── middleware/           # Auth & error handling
+│   └── index.ts              # Server entrypoint
+├── shared/                  # Shared types between client and server
+├── drizzle/                 # Database schema & migrations
+├── package.json
+├── tsconfig.json
+└── .env.example
 
-**API Structure**
-- Public endpoints: GET /api/properties, GET /api/properties/:id
-- Protected endpoints: POST /api/properties (admin only), PUT/DELETE /api/properties/:id (admin only)
-- Authentication endpoints: POST /api/login, POST /api/register, POST /api/logout, GET /api/user
-- Consistent error handling with appropriate HTTP status codes
 
-**Data Access Layer**
-- Storage abstraction pattern (IStorage interface) allowing for potential database swapping
-- DatabaseStorage implementation using Drizzle ORM for type-safe database operations
-- All database queries encapsulated within the storage layer, keeping route handlers clean
 
-**Authentication & Security**
-- Password hashing using bcryptjs with configurable salt rounds (10)
-- Session management with express-session and connect-pg-simple for PostgreSQL-backed sessions
-- Role-based access control (user vs. admin roles)
-- CSRF protection through session configuration
+```
+---
+## 🚀 Development Setup 
+```bash
+# 1. Clone repository
+git clone https://github.com/<your-username>/PropManage.git
+cd PropManage
 
-### Data Layer
+# 2. Install dependencies
+npm install
 
-**Database Technology**
-- PostgreSQL via Neon serverless driver for scalable cloud-native database access
-- WebSocket-based connection pooling for efficient connection management
-- Drizzle ORM providing type-safe query building and schema management
+# 3. Set environment variables
+cp .env.example .env
 
-**Schema Design**
-- Users table: Stores authentication credentials, role (user/admin), and profile information
-- Properties table: Comprehensive property data including address, pricing, features, and metadata
-- Relational design with foreign key from properties.createdBy to users.id
-- UUID primary keys for security and scalability
-- Array type for property features, enabling flexible amenity storage
+# 4. Run database migrations
+npx drizzle-kit push
 
-**Data Validation**
-- Zod schemas (drizzle-zod integration) for runtime validation on both client and server
-- Type inference from database schema to ensure consistency
-- Validation at API boundaries prevents invalid data from reaching the database
+# 5. Start development servers
+npm run dev
 
-### Development & Build Pipeline
-
-**Development Environment**
-- Hot module replacement via Vite for rapid frontend development
-- tsx for running TypeScript server code without compilation step
-- Concurrent development: Vite dev server proxies API requests to Express backend
-- Environment variables managed through .env files (DATABASE_URL, SESSION_SECRET)
-
-**Production Build**
-- Frontend: Vite builds optimized static assets to dist/public
-- Backend: esbuild bundles server code with external packages to dist/
-- Single deployment artifact containing both frontend and backend
-- Static file serving handled by Express in production mode
-
-**Type Safety**
-- Shared types between client and server via @shared directory
-- TypeScript strict mode enabled across the entire codebase
-- Path aliases for clean imports (@/, @shared/, @assets/)
-
-## External Dependencies
-
-### Database Services
-- **Neon PostgreSQL**: Serverless PostgreSQL database with WebSocket support for efficient connection management
-- **connect-pg-simple**: PostgreSQL session store for persistent user sessions
-
-### Authentication
-- **Passport.js**: Authentication middleware with Local Strategy for username/password authentication
-- **bcryptjs**: Password hashing library for secure credential storage
-
-### UI Component Libraries
-- **Radix UI**: Comprehensive set of unstyled, accessible component primitives (@radix-ui/react-*)
-- **shadcn/ui**: Pre-styled component layer built on Radix UI following design system principles
-- **Lucide React**: Icon library for consistent iconography
-
-### Frontend Tooling
-- **React Hook Form**: Form state management with performance optimization
-- **Zod**: Schema validation for forms and API data
-- **@hookform/resolvers**: Integration layer between React Hook Form and Zod
-- **TanStack Query**: Server state management with caching, background updates, and optimistic UI
-- **Tailwind CSS**: Utility-first CSS framework
-- **date-fns**: Date manipulation and formatting
-
-### Build Tools
-- **Vite**: Frontend build tool and development server
-- **esbuild**: Fast JavaScript bundler for backend code
-- **TypeScript**: Type system for JavaScript
-- **Drizzle Kit**: Database migration tool and schema management
-
-### Development Tools
-- **@replit/vite-plugin-runtime-error-modal**: Development error overlay
-- **@replit/vite-plugin-cartographer**: Replit-specific development tooling
-- **@replit/vite-plugin-dev-banner**: Development mode indicator
+```
